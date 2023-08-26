@@ -11,9 +11,10 @@ import java.util.Set;
 
 @Service
 public class CommentService {
-    private static final String EVENT_NAME = "connect";
-    private static final long SSE_EMITTER_TIME_OUT_MILLIS = 1_000L;
-    private static final long EVENT_RECONNECT_TIME_MILLIS = 500L;
+    private static final String CONNECT_EVENT_NAME = "connect";
+    private static final String SEND_COMMENT_EVENT_NAME = "newComment";
+    private static final long SSE_EMITTER_TIME_OUT_MILLIS = 300_000L;
+    private static final long EVENT_RECONNECT_TIME_MILLIS = 3_000L;
     private final HashMap<String, Set<SseEmitter>> container = new HashMap<>();
 
 
@@ -31,7 +32,7 @@ public class CommentService {
 
         // 2. 전송할 이벤트 작성
         SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
-                .name(EVENT_NAME)
+                .name(CONNECT_EVENT_NAME)
                 .data("connected!")
                 .reconnectTime(EVENT_RECONNECT_TIME_MILLIS);
 
@@ -46,6 +47,15 @@ public class CommentService {
     }
 
     public void sendComment(String articleId, Comment comment) {
-        
+        // 1. Article과 연결된 모든 Emitter 가져오기
+        Set<SseEmitter> emitters = container.getOrDefault(articleId, new HashSet<>());
+
+        // 2. 가져온 Emitter 에게 댓글 전송하기
+        SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
+                .name(SEND_COMMENT_EVENT_NAME)
+                .data(comment)
+                .reconnectTime(EVENT_RECONNECT_TIME_MILLIS);
+        emitters.forEach(sseEmitter -> sendEvent(sseEmitter, sseEventBuilder));
+
     }
 }
