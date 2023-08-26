@@ -3,6 +3,8 @@ package com.example.youthcon.handson;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+
 @Service
 public class CommentService {
     private static final String EVENT_NAME = "connect";
@@ -17,8 +19,13 @@ public class CommentService {
                 .name(EVENT_NAME)
                 .data("connected!")
                 .reconnectTime(EVENT_RECONNECT_TIME);
-        
+
         // 3. 작성한 이벤트를 생성한 Emitter에 전송
+        try {
+            emitter.send(sseEventBuilder);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         // 4. Article과 연결된 Emitter Container 생성
     }
 }
