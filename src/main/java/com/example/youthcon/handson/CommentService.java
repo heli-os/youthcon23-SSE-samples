@@ -12,7 +12,7 @@ import java.util.Set;
 public class CommentService {
     private static final String EVENT_NAME = "connect";
     private static final long SSE_EMITTER_TIME_OUT_MILLIS = 1_000L;
-    private static final long EVENT_RECONNECT_TIME_MILLIS = 1_000L;
+    private static final long EVENT_RECONNECT_TIME_MILLIS = 500L;
     private final HashMap<String, Set<SseEmitter>> container = new HashMap<>();
 
 
