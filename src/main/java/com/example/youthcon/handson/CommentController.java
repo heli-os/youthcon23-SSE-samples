@@ -18,6 +18,7 @@ public class CommentController {
 
     @GetMapping(value = "/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<SseEmitter> connect(@RequestParam("articleId") String articleId) {
-        return;
+        SseEmitter emitter = commentService.connect(articleId);
+        return ResponseEntity.ok(emitter);
     }
 }
