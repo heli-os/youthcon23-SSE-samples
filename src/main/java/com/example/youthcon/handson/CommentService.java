@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CommentService {
@@ -15,23 +15,24 @@ public class CommentService {
     private static final String SEND_COMMENT_EVENT_NAME = "newComment";
     private static final long SSE_EMITTER_TIME_OUT_MILLIS = 300_000L;
     private static final long EVENT_RECONNECT_TIME_MILLIS = 3_000L;
-    private final HashMap<String, Set<SseEmitter>> container = new HashMap<>();
+    private final ConcurrentHashMap<String, Set<SseEmitter>> container = new ConcurrentHashMap<>();
 
 
-    private static void sendEvent(SseEmitter emitter, SseEmitter.SseEventBuilder sseEventBuilder) {
+    private static void sendEvent(final SseEmitter emitter, final SseEmitter.SseEventBuilder sseEventBuilder) {
         try {
             emitter.send(sseEventBuilder);
         } catch (IOException e) {
+            emitter.complete();
             throw new RuntimeException(e);
         }
     }
 
-    public SseEmitter connect(String articleId) {
+    public SseEmitter connect(final String articleId) {
         // 1. 새로운 Emitter 생성
-        SseEmitter sseEmitter = new SseEmitter(SSE_EMITTER_TIME_OUT_MILLIS);
+        final SseEmitter sseEmitter = new SseEmitter(SSE_EMITTER_TIME_OUT_MILLIS);
 
         // 2. 전송할 이벤트 작성
-        SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
+        final SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
                 .name(CONNECT_EVENT_NAME)
                 .data("connected!")
                 .reconnectTime(EVENT_RECONNECT_TIME_MILLIS);
@@ -40,22 +41,21 @@ public class CommentService {
         sendEvent(sseEmitter, sseEventBuilder);
 
         // 4. Article과 연결된 Emitter Container 생성
-        Set<SseEmitter> existSSeEmitters = container.getOrDefault(articleId, new HashSet<>());
+        final Set<SseEmitter> existSSeEmitters = container.getOrDefault(articleId, new HashSet<>());
         existSSeEmitters.add(sseEmitter);
         container.put(articleId, existSSeEmitters);
         return sseEmitter;
     }
 
-    public void sendComment(String articleId, Comment comment) {
+    public void sendComment(final String articleId, final Comment comment) {
         // 1. Article과 연결된 모든 Emitter 가져오기
-        Set<SseEmitter> emitters = container.getOrDefault(articleId, new HashSet<>());
+        final Set<SseEmitter> emitters = container.getOrDefault(articleId, new HashSet<>());
 
         // 2. 가져온 Emitter 에게 댓글 전송하기
-        SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
+        final SseEmitter.SseEventBuilder sseEventBuilder = SseEmitter.event()
                 .name(SEND_COMMENT_EVENT_NAME)
                 .data(comment)
                 .reconnectTime(EVENT_RECONNECT_TIME_MILLIS);
         emitters.forEach(sseEmitter -> sendEvent(sseEmitter, sseEventBuilder));
-
     }
 }

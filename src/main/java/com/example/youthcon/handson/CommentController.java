@@ -16,13 +16,13 @@ public class CommentController {
     }
 
     @GetMapping(value = "/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<SseEmitter> connect(@RequestParam("articleId") String articleId) {
+    public ResponseEntity<SseEmitter> connect(final @RequestParam("articleId") String articleId) {
         SseEmitter emitter = commentService.connect(articleId);
         return ResponseEntity.ok(emitter);
     }
 
     @PostMapping("/comment")
-    public ResponseEntity<Void> sendComment(@RequestBody Comment comment, @RequestParam("articleId") String articleId) {
+    public ResponseEntity<Void> sendComment(final @RequestBody Comment comment, final @RequestParam("articleId") String articleId) {
         commentService.sendComment(articleId, comment);
         return ResponseEntity.ok().build();
     }
