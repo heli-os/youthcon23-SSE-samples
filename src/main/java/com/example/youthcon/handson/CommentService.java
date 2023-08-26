@@ -1,5 +1,6 @@
 package com.example.youthcon.handson;
 
+import com.example.youthcon.preparation.Comment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -42,5 +43,9 @@ public class CommentService {
         existSSeEmitters.add(sseEmitter);
         container.put(articleId, existSSeEmitters);
         return sseEmitter;
+    }
+
+    public void sendComment(String articleId, Comment comment) {
+        
     }
 }
